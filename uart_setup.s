@@ -67,7 +67,8 @@
     UART_put_byte:
         ldr r1,=uartbase @ load base address of UART
         ldr r1,[r1] @ load base address of UART
-        putlp: ldr r2,[r1,#UART_FR] @ read the flag resister
+    putlp: 
+        ldr r2,[r1,#UART_FR] @ read the flag resister
         tst r2,#UART_TXFF @ check if transmit FIFO is full
         bne putlp @ loop while transmit FIFO is full
         str r0,[r1,#UART_DR] @ write the char to the FIFO
@@ -78,7 +79,8 @@
     UART_get_byte:
         ldr r1,=uartbase @ load base address of UART
         ldr r1,[r1] @ load base address of UART
-        getlp: ldr r2,[r1,#UART_FR] @ read the flag resister
+    getlp: 
+        ldr r2,[r1,#UART_FR] @ read the flag resister
         tst r2,#UART_RXFE @ check if receive FIFO is empty
         bne getlp @ loop while receive FIFO is empty
         ldr r0,[r1,#UART_DR] @ read the char from the FIFO
@@ -98,7 +100,7 @@
     @@ handle receive parity error here - does nothing now
     get_ok3:
         tst r0,#UART_FE @ check for framing error
-        101 bne get_ok4
+        bne get_ok4
     
     @@ handle receive framing error here - does nothing now
     get_ok4:
