@@ -1,4 +1,6 @@
-    @@ offsets to the UART registers
+.equ uartbase, 0x7E20100
+
+ @@ offsets to the UART registers
     .equ UART_DR, 0x00 @ data register
     .equ UART_RSRECR, 0x04 @ Receive Status/Error clear
     .equ UART_FR, 0x18 @ flag register
@@ -131,7 +133,7 @@
         str r0,[r1,#UART_IMSC]
         @@ enable receiver and transmitter and enable the uart
         .equ FINALBITS, (UART_RXE|UART_TXE|UART_UARTEN)
-        dr r0,=FINALBITS
+        ldr r0,=FINALBITS
         str r0,[r1,#UART_CR]
         @@ return
         mov pc,lr
