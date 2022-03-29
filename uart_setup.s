@@ -278,7 +278,6 @@ IO_closeloop:
 UART_put_byte:
     ldr r1,=uartbase @ load base address of UART
     ldr r1,[r1] @ load base address of UART
-
 putlp: 
     ldr r2,[r1,#UART_FR] @ read the flag resister
     tst r2,#UART_TXFF @ check if transmit FIFO is full
@@ -291,30 +290,25 @@ putlp:
 UART_get_byte:
     ldr r1,=uartbase @ load base address of UART
     ldr r1,[r1] @ load base address of UART
-
-getlp: 
+getlp:
     ldr r2,[r1,#UART_FR] @ read the flag resister
     tst r2,#UART_RXFE @ check if receive FIFO is empty
     bne getlp @ loop while receive FIFO is empty
     ldr r0,[r1,#UART_DR] @ read the char from the FIFO
     tst r0,#UART_OE @ check for overrun error
-    bne get_ok1
-    
+    bne get_ok1    
 @@ handle receive overrun error here - does nothing now
 get_ok1:
     tst r0,#UART_BE @ check for break error
     bne get_ok2
-
 @@ handle receive break error here - does nothing now
 get_ok2:
     tst r0,#UART_PE @ check for parity error
     bne get_ok3
-
 @@ handle receive parity error here - does nothing now
 get_ok3:
     tst r0,#UART_FE @ check for framing error
     bne get_ok4
-
 @@ handle receive framing error here - does nothing now
 get_ok4:
     @@ return
@@ -329,7 +323,7 @@ UART_init:
     ldr r1,=uartbase @ load base address of UART
     ldr r1,[r1] @ load base address of UART
     @@ set baud rate divisor
-    @@ (3MHz / ( 115200 ∗ 16 )) = 1.62760416667
+    @@ (3MHz / ( 115200 * 16 )) = 1.62760416667
     @@ = 1.101000 in binary
     mov r0,#1
     str r0,[r1,#UART_IBRD]
@@ -362,10 +356,10 @@ UART_init:
 @     .global UART_set_baud
 @ UART_set_baud:
 @     @@ set baud rate divisor using formula:
-@     @@ (3000000.0 / ( R0 ∗ 16 )) ASSUMING 3Mhz clock
-@     lsl r1,r0,#4 @ r1 <- desired baud ∗ 16
+@     @@ (3000000.0 / ( R0 * 16 )) ASSUMING 3Mhz clock
+@     lsl r1,r0,#4 @ r1 <- desired baud * 16
 @     ldr r0,=(3000000<<6)@ Load 3 MHz as a U(26,6) in r0
-@     bl divide @ divide clk freq by (baud∗16)
+@     bl divide @ divide clk freq by (baud*16)
 @     asr r1,r0,#6 @ put integer divisor into r1
 @     and r0,r0,#0x3F @ put fractional divisor into r0
 @     ldr r2,=uartbase @ load base address of UART
