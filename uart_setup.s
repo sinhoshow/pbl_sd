@@ -13,24 +13,17 @@
 @@@ has been called.
     .global gpiobase
 gpiobase: .word 0
-    .global pwmbase
-pwmbase : .word 0
     .global uartbase
 uartbase: .word 0
-    .global clkbase
-clkbase : .word 0
+    
 
 @@@ These are the addresses for the I/O devices (after
 @@@ the firmware boot code has remapped them).
     .equ PERI_BASE, 0x20000000 @ start of all devices
 @@ Base Physical Address of the GPIO registers
     .equ GPIO_BASE, (PERI_BASE + 0x200000)
-@@ Base Physical Address of the PWM registers
-    .equ PWM_BASE, (PERI_BASE + 0x20C000)
 @@ Base Physical Address of the UART 0 device
     .equ UART0_BASE,(PERI_BASE + 0x201000)
-@@ Base Physical Address of the Clock/timer registers
-    .equ CLK_BASE, (PERI_BASE + 0x101000)
 
     .equ MAP_FAILED,-1
     .equ MAP_SHARED, 1
@@ -58,17 +51,15 @@ mappedstr: .asciz "Mapped %s device at 0x%08X\n"
 openfailed: .asciz "IO_init: failed to open /dev/mem: "
 mapfailedmsg: .asciz "IO_init: mmap of %s failed: "
 gpiostr: .asciz "GPIO"
-pwmstr: .asciz "PWM"
 uart0str: .asciz "UART0"
-clkstr: .asciz "CLK"
 
     .text
 @@@ -----------------------------------------------------------
 @@@ IO_init() maps devices into memory space and stores their
 @@@ addresses in global variables.
 @@@ -----------------------------------------------------------
-    .global _start
-_start:
+    .global main
+main:
     stmfd sp!,{r4,r5,lr}
     @@ Try to open /dev/mem
     ldr r0,=memdev @ load address of "/dev/mem"
@@ -90,6 +81,7 @@ init_opened:
     mov r4,r0 @ move file descriptor to r4
     ldr r0,=successstr
     bl printf
+    
     @@ Map the GPIO device
     mov r0,r4 @ move file descriptor to r4
     ldr r1,=GPIO_BASE @ address of device in memory
@@ -104,20 +96,7 @@ init_opened:
     ldr r0,=mappedstr @ print success message
     ldr r1,=gpiostr
     bl printf
-    @@ Map the PWM device
-    mov r0,r4 @ move file descriptor to r4
-    ldr r1,=PWM_BASE @ address of device in memory
-    bl trymap
-    cmp r0,#MAP_FAILED
-    ldrne r1,=pwmbase @ if succeeded, load pointer
-    strne r0,[r1] @ if succeeded, store value
-    ldreq r1,=pwmstr @ if failed, load pointer to string
-    beq map_failed_exit @ if failed, print message
-    mov r2,r1
-    ldr r2,[r2]
-    ldr r0,=mappedstr @ print success message
-    ldr r1,=pwmstr
-    bl printf
+    
     @@ Map the UART0 device
     mov r0,r4 @ move file descriptor to r4
     ldr r1,=UART0_BASE @ address of device in memory
@@ -132,20 +111,8 @@ init_opened:
     ldr r0,=mappedstr @ print success message
     ldr r1,=uart0str
     bl printf
-    @@ Map the clock manager device
-    mov r0,r4 @ move file descriptor to r4
-    ldr r1,=CLK_BASE @ address of device in memory
-    bl trymap
-    cmp r0,#MAP_FAILED
-    ldrne r1,=clkbase @ if succeeded, load pointer
-    strne r0,[r1] @ if succeeded, store value
-    ldreq r1,=clkstr @ if failed, load pointer to string
-    beq map_failed_exit @ if failed, print message
-    mov r2,r1
-    ldr r2,[r2]
-    ldr r0,=mappedstr @ print success message
-    ldr r1,=clkstr
-    bl printf
+    
+    
     @@ All mmaps have succeeded.
     @@ Close file and return 1 for success
     mov r5,#1
