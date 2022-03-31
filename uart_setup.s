@@ -52,6 +52,7 @@ openfailed: .asciz "IO_init: failed to open /dev/mem: "
 mapfailedmsg: .asciz "IO_init: mmap of %s failed: "
 gpiostr: .asciz "GPIO"
 uart0str: .asciz "UART0"
+inituart: .asciz "Inicializando a uart"
 
     .text
 @@@ -----------------------------------------------------------
@@ -287,6 +288,8 @@ get_ok4:
     @@@ 115200 baud, no parity, 2 stop bits, 8 data bits
     .global UART_init
 UART_init:
+    ldr r0,=inituart
+    bl printf
     ldr r1,=uartbase @ load base address of UART
     ldr r1,[r1] @ load base address of UART
     @@ set baud rate divisor
