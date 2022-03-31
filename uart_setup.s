@@ -67,8 +67,8 @@ clkstr: .asciz "CLK"
 @@@ IO_init() maps devices into memory space and stores their
 @@@ addresses in global variables.
 @@@ -----------------------------------------------------------
-    .global IO_init
-IO_init:
+    .global _start
+_start:
     stmfd sp!,{r4,r5,lr}
     @@ Try to open /dev/mem
     ldr r0,=memdev @ load address of "/dev/mem"
@@ -123,7 +123,7 @@ init_opened:
     ldr r1,=UART0_BASE @ address of device in memory
     bl trymap
     cmp r0,#MAP_FAILED
-    ldrne r1,=uart0base @ if succeeded, load pointer
+    ldrne r1,=uartbase @ if succeeded, load pointer
     strne r0,[r1] @ if succeeded, store value
     ldreq r1,=uart0str @ if failed, load pointer to string
     beq map_failed_exit @ if failed, print message
