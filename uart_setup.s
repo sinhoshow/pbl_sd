@@ -68,11 +68,11 @@ main:
     cmp r0,#0 @ check result
     bge init_opened @ if open failed,
     ldr r0,=openfailed @ print message and exit
-    bl printf
-    bl __errno_location
+@    bl printf
+@    bl __errno_location
     ldr r0, [r0]
-    bl strerror
-    bl perror
+@    bl strerror
+@    bl perror
     mov r0,#0 @ return 0 for failure
     b init_exit
 
@@ -80,7 +80,7 @@ init_opened:
     @@ Open succeeded. Now map the devices
     mov r4,r0 @ move file descriptor to r4
     ldr r0,=successstr
-    bl printf
+@    bl printf
     
     @@ Map the GPIO device
     mov r0,r4 @ move file descriptor to r4
@@ -95,7 +95,7 @@ init_opened:
     ldr r2,[r2]
     ldr r0,=mappedstr @ print success message
     ldr r1,=gpiostr
-    bl printf
+@   bl printf
     
     @@ Map the UART0 device
     mov r0,r4 @ move file descriptor to r4
@@ -110,23 +110,23 @@ init_opened:
     ldr r2,[r2]
     ldr r0,=mappedstr @ print success message
     ldr r1,=uart0str
-    bl printf
+@    bl printf
     
     
     @@ All mmaps have succeeded.
     @@ Close file and return 1 for success
     mov r5,#1
-    b init_close
+@   b init_close
 
 map_failed_exit:
     @@ At least one mmap failed. Print error,
     @@ unmap everything and return
     ldr r0,=mapfailedmsg
-    bl printf
-    bl __errno_location
+@    bl printf
+@    bl __errno_location
     ldr r0, [r0, #0]
-    bl strerror
-    bl perror
+@    bl strerror
+@    bl perror
     bl IO_close
     mov r0,#0
 
