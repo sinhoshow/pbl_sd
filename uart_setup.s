@@ -6,6 +6,7 @@
 @@@ global variables, and the user program can then
 @@@ use those pointers to access the device registers.
 @@@ -----------------------------------------------------------
+	.include "macros.s"
     .data
 @@@ -----------------------------------------------------------
 @@@ The following global variables will hold the addresses of
@@ -14,8 +15,7 @@
     .global gpiobase
 gpiobase: .word 0
     .global uartbase
-uartbase: .word 0
-    
+uartbase: .word 0    
 
 @@@ These are the addresses for the I/O devices (after
 @@@ the firmware boot code has remapped them).
@@ -66,13 +66,13 @@ charTest: .asciz "a"
 main:
     stmfd sp!,{r4,r5,lr}
     @@ Try to open /dev/mem
-    ldr r0,=memdev @ load address of "/dev/mem"
+	ldr r6, =memdev @ load address of "/dev/mem"
     ldr r1,=(O_RDWR + O_SYNC) @ set up flags
-    bl open @ call the open syscall
+    openFile	memdev, S_RDWR @ call the open syscall
     cmp r0,#0 @ check result
     bge init_opened @ if open failed,
-    ldr r0,=openfailed @ print message and exit
-    bl printf
+    @ldr r0,=openfailed @ print message and exit
+    @bl printf
     bl __errno_location
     ldr r0, [r0]
     bl strerror
@@ -83,8 +83,8 @@ main:
 init_opened:
     @@ Open succeeded. Now map the devices
     mov r4,r0 @ move file descriptor to r4
-    ldr r0,=successstr
-    bl printf
+    @ldr r0,=successstr
+    @bl printf
     
     @@ Map the GPIO device
     mov r0,r4 @ move file descriptor to r4
@@ -97,9 +97,9 @@ init_opened:
     beq map_failed_exit @ if failed, print message
     mov r2,r1
     ldr r2,[r2]
-    ldr r0,=mappedstr @ print success message
+    @ldr r0,=mappedstr @ print success message
     ldr r1,=gpiostr
-    bl printf
+    @bl printf
     
     @@ Map the UART0 device
     mov r0,r4 @ move file descriptor to r4
@@ -298,11 +298,13 @@ get_ok4:
     @@@ UART init will set default values:
     @@@ 115200 baud, no parity, 2 stop bits, 8 data bits
     .global UART_init
-UART_init:
+UART_init:  
     ldr r0,=inituart
     bl printf
     ldr r1,=uartbase @ load base address of UART
     ldr r1,[r1] @ load base address of UART
+    @@mov r0,#0
+    @@str r0,[r1,#UART_CR]
     @@ set baud rate divisor
     @@ (3MHz / ( 115200 * 16 )) = 1.62760416667
     @@ = 1.101000 in binary
