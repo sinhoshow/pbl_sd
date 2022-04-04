@@ -47,14 +47,21 @@ uartbase: .word 0
 
 memdev: .asciz "/dev/mem"
 successstr: .asciz "Successfully opened /dev/mem\n"
+successstrLen: .word .-successstr
 mappedstr: .asciz "Mapped %s device at 0x%08X\n"
+mappedstrLen: .word .-mappedstr
 openfailed: .asciz "IO_init: failed to open /dev/mem: "
+openfailedLen: .word .-openfailed
 mapfailedmsg: .asciz "IO_init: mmap of %s failed: "
+mapfailedmsgLen: .word .-mapfailedmsg
 gpiostr: .asciz "GPIO"
 uart0str: .asciz "UART0"
 inituart: .asciz "Inicializando a uart\n"
+inituartLen: .word .-inituart
 sendChar: .asciz "Enviando char\n"
+sendCharLen: .word .-sendChar
 getChar: .asciz "Recebendo char\n"
+getCharLen: .word .-getChar
 charTest: .asciz "a"
 
     .text
@@ -62,17 +69,18 @@ charTest: .asciz "a"
 @@@ IO_init() maps devices into memory space and stores their
 @@@ addresses in global variables.
 @@@ -----------------------------------------------------------
-    .global main
-main:
+    .global _start
+_start:
     stmfd sp!,{r4,r5,lr}
     @@ Try to open /dev/mem
 	ldr r6, =memdev @ load address of "/dev/mem"
     ldr r1,=(O_RDWR + O_SYNC) @ set up flags
-    openFile	memdev, S_RDWR @ call the open syscall
+    openFile    memdev, S_RDWR @ call the open syscall
     cmp r0,#0 @ check result
     bge init_opened @ if open failed,
     @ldr r0,=openfailed @ print message and exit
     @bl printf
+    printStr openfailed openfailedLen
     bl __errno_location
     ldr r0, [r0]
     bl strerror
@@ -85,6 +93,7 @@ init_opened:
     mov r4,r0 @ move file descriptor to r4
     @ldr r0,=successstr
     @bl printf
+    printStr successstr successstrLen
     
     @@ Map the GPIO device
     mov r0,r4 @ move file descriptor to r4
@@ -100,6 +109,7 @@ init_opened:
     @ldr r0,=mappedstr @ print success message
     ldr r1,=gpiostr
     @bl printf
+    printStr mappedstr mappedstrLen
     
     @@ Map the UART0 device
     mov r0,r4 @ move file descriptor to r4
@@ -112,9 +122,10 @@ init_opened:
     beq map_failed_exit @ if failed, print message
     mov r2,r1
     ldr r2,[r2]
-    ldr r0,=mappedstr @ print success message
+    @ldr r0,=mappedstr @ print success message
     ldr r1,=uart0str
-    bl printf
+    @bl printf
+    printStr mappedstr mappedstrLen
     
     
     @@ All mmaps have succeeded.
@@ -125,8 +136,9 @@ init_opened:
 map_failed_exit:
     @@ At least one mmap failed. Print error,
     @@ unmap everything and return
-    ldr r0,=mapfailedmsg
-    bl printf
+    @ ldr r0,=mapfailedmsg
+    @ bl printf
+    printStr mapfailedmsg mapfailedmsgLen
     bl __errno_location
     ldr r0, [r0, #0]
     bl strerror
@@ -156,7 +168,9 @@ trymap:
     mov r1,#BLOCK_SIZE
     mov r2,#(PROT_READ + PROT_WRITE)
     mov r3,#MAP_SHARED
-    bl mmap
+    mov r7, #sys_mmap2 @ mmap2 service num
+    svc 0 @ call service
+    @bl mmap
     add sp,sp,#8 @ pop params from stack
     cmp r0,#-1
     addne r0,r0,r6 @ add offset from page boundary
@@ -247,8 +261,9 @@ IO_closeloop:
 @@ ----------------------------------------------------------
     .global UART_put_byte
 UART_put_byte:
-    ldr r0,=sendChar
-    bl printf
+    @ ldr r0,=sendChar
+    @ bl printf
+    printStr sendChar sendCharLen
     ldr r3,=charTest
     ldr r1,=uartbase @ load base address of UART
     ldr r1,[r1] @ load base address of UART
@@ -263,8 +278,9 @@ putlp:
 @@@ ---------------------------------------------------------
     .global UART_get_byte
 UART_get_byte:
-    ldr r0,=getChar
-    bl printf
+    @ ldr r0,=getChar
+    @ bl printf
+    printStr getChar
     ldr r1,=uartbase @ load base address of UART
     ldr r1,[r1] @ load base address of UART
 getlp:
@@ -289,7 +305,7 @@ get_ok3:
 @@ handle receive framing error here - does nothing now
 get_ok4:
     @@ return
-    bl printf
+    @bl printf
     bl init_exit
 @    mov pc,lr @ return the received character
 
@@ -299,8 +315,9 @@ get_ok4:
     @@@ 115200 baud, no parity, 2 stop bits, 8 data bits
     .global UART_init
 UART_init:  
-    ldr r0,=inituart
-    bl printf
+    @ ldr r0,=inituart
+    @ bl printf
+    printStr inituart inituartLen
     ldr r1,=uartbase @ load base address of UART
     ldr r1,[r1] @ load base address of UART
     @@mov r0,#0
