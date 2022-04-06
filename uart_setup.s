@@ -1,3 +1,4 @@
+
 @@@ Raspberry Pi devices
 @@@ -----------------------------------------------------------
 @@@ This file provides a function "IO_init" that will
@@ -58,10 +59,11 @@
         @@ Try to open /dev/mem
         ldr r6, =memdev @ load address of "/dev/mem"
         ldr r1,=(O_RDWR + O_SYNC) @ set up flags
-        openFile memdev, S_RDWR_file @ call the open syscall        
+        openFile memdev, S_RDWR_file @ call the open syscall
         @printStr successstr, r2
         cmp r0,#0 @ check result
         bge init_opened @ if open failed,
+		printStr test, testLen @ error aqui 
         @ldr r0,=openfailed @ print message and exit
         @bl printf
         @printStr openfailed, openfailedLen
@@ -83,34 +85,39 @@ init_opened:
     mov r0,r4 @ move file descriptor to r4
     ldr r1,=GPIO_BASE @ address of device in memory
     bl trymap
-    cmp r0,#MAP_FAILED
-    ldrne r1,=gpiobase @ if succeeded, load pointer
-    strne r0,[r1] @ if succeeded, store value
-    ldreq r1,=gpiostr @ if failed, load pointer to string
-    beq map_failed_exit @ if failed, print message
+
+    @error cmp r0,#MAP_FAILED
+    @error ldrne r1,=gpiobase @ if succeeded, load pointer
+    @error strne r0,[r1] @ if succeeded, store value
+    @error ldreq r1,=gpiostr @ if failed, load pointer to string
+ 	@error beq map_failed_exit @ if failed, print message
+
     mov r2,r1
-    ldr r2,[r2]
+	@error ldr r2,[r2]
     @ldr r0,=mappedstr @ print success message
     ldr r1,=gpiostr
     @bl printf
     @printStr mappedstr, mappedstrLen
-    
+	
+
     @@ Map the UART0 device
+
     mov r0,r4 @ move file descriptor to r4
     ldr r1,=UART0_BASE @ address of device in memory
+
     bl trymap
-    cmp r0,#MAP_FAILED
-    ldrne r1,=uartbase @ if succeeded, load pointer
-    strne r0,[r1] @ if succeeded, store value
-    ldreq r1,=uart0str @ if failed, load pointer to string
-    beq map_failed_exit @ if failed, print message
+    @cmp r0,#MAP_FAILED			@ era para entrar aqui só se fosse falho ?
+    @ldrne r1,=uartbase @ if succeeded, load pointer
+    @strne r0,[r1] @ if succeeded, store value
+    @error ldreq r1,=uart0str @ if failed, load pointer to string
+    @error beq map_failed_exit @ if failed, print message
     mov r2,r1
-    ldr r2,[r2]
+   	@error ldr r2,[r2]
     @ldr r0,=mappedstr @ print success message
     ldr r1,=uart0str
+
     @bl printf
     @printStr mappedstr, mappedstrLen
-    
     
     @@ All mmaps have succeeded.
     @@ Close file and return 1 for success
@@ -374,3 +381,5 @@ sendCharLen: .word .-sendChar
 getChar: .asciz "Recebendo char\n"
 getCharLen: .word .-getChar
 charTest: .asciz "a"
+test: .asciz "cheguei aqui"
+testLen: .word .-test
