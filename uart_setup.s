@@ -1,4 +1,3 @@
-
 @@@ Raspberry Pi devices
 @@@ -----------------------------------------------------------
 @@@ This file provides a function "IO_init" that will
@@ -85,7 +84,7 @@ init_opened:
     mov r0,r4 @ move file descriptor to r4
     ldr r1,=GPIO_BASE @ address of device in memory
     bl trymap
-
+	
     @error cmp r0,#MAP_FAILED
     @error ldrne r1,=gpiobase @ if succeeded, load pointer
     @error strne r0,[r1] @ if succeeded, store value
@@ -99,16 +98,16 @@ init_opened:
     @bl printf
     @printStr mappedstr, mappedstrLen
 	
-
+	@@@@@@@ Da para ser colocado em outra função 
     @@ Map the UART0 device
 
     mov r0,r4 @ move file descriptor to r4
     ldr r1,=UART0_BASE @ address of device in memory
 
     bl trymap
-    @cmp r0,#MAP_FAILED			@ era para entrar aqui só se fosse falho ?
-    @ldrne r1,=uartbase @ if succeeded, load pointer
-    @strne r0,[r1] @ if succeeded, store value
+    @ cmp r0,#MAP_FAILED			@@@@@@@ era para entrar aqui só se fosse falho ?
+    @ ldrne r1,=uartbase @ if succeeded, load pointer
+    @ strne r0,[r1] @ if succeeded, store value
     @error ldreq r1,=uart0str @ if failed, load pointer to string
     @error beq map_failed_exit @ if failed, print message
     mov r2,r1
@@ -166,7 +165,7 @@ trymap:
     cmp r0,#-1
     addne r0,r0,r6 @ add offset from page boundary
     ldmfd sp!,{r5-r7,pc}
-
+	printStr test, testLen @ aqui era pra printa 
     @@@ -----------------------------------------------------------
     @@@ IO_close unmaps all of the devices
     .global IO_close
