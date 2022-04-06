@@ -6,16 +6,16 @@
 @@@ global variables, and the user program can then
 @@@ use those pointers to access the device registers.
 @@@ -----------------------------------------------------------
-	.include "macros.s"
-    .data
+.include "macros.s"
+.text
 @@@ -----------------------------------------------------------
 @@@ The following global variables will hold the addresses of
 @@@ the devices that can be accessed directly after IO_init
 @@@ has been called.
     .global gpiobase
-gpiobase: .word 0
+    gpiobase: .word 0
     .global uartbase
-uartbase: .word 0    
+    uartbase: .word 0    
 
 @@@ These are the addresses for the I/O devices (after
 @@@ the firmware boot code has remapped them).
@@ -45,56 +45,40 @@ uartbase: .word 0
     .equ O_FSYNC, O_SYNC
     .equ O_ASYNC, 00020000
 
-memdev: .asciz "/dev/mem"
-successstr: .asciz "Successfully opened /dev/mem\n"
-successstrLen: .word .-successstr
-mappedstr: .asciz "Mapped %s device at 0x%08X\n"
-mappedstrLen: .word .-mappedstr
-openfailed: .asciz "IO_init: failed to open /dev/mem: "
-openfailedLen: .word .-openfailed
-mapfailedmsg: .asciz "IO_init: mmap of %s failed: "
-mapfailedmsgLen: .word .-mapfailedmsg
-gpiostr: .asciz "GPIO"
-uart0str: .asciz "UART0"
-inituart: .asciz "Inicializando a uart\n"
-inituartLen: .word .-inituart
-sendChar: .asciz "Enviando char\n"
-sendCharLen: .word .-sendChar
-getChar: .asciz "Recebendo char\n"
-getCharLen: .word .-getChar
-charTest: .asciz "a"
 
-    .text
+
+    
 @@@ -----------------------------------------------------------
 @@@ IO_init() maps devices into memory space and stores their
 @@@ addresses in global variables.
 @@@ -----------------------------------------------------------
     .global _start
-_start:
-    stmfd sp!,{r4,r5,lr}
-    @@ Try to open /dev/mem
-	ldr r6, =memdev @ load address of "/dev/mem"
-    ldr r1,=(O_RDWR + O_SYNC) @ set up flags
-    openFile    memdev, S_RDWR @ call the open syscall
-    cmp r0,#0 @ check result
-    bge init_opened @ if open failed,
-    @ldr r0,=openfailed @ print message and exit
-    @bl printf
-    printStr openfailed openfailedLen
-    bl __errno_location
-    ldr r0, [r0]
-    bl strerror
-    bl perror
-    mov r0,#0 @ return 0 for failure
-    b init_exit
+    _start:        
+        stmfd sp!,{r4,r5,lr}
+        @@ Try to open /dev/mem
+        ldr r6, =memdev @ load address of "/dev/mem"
+        ldr r1,=(O_RDWR + O_SYNC) @ set up flags
+        openFile memdev, S_RDWR_file @ call the open syscall        
+        @printStr successstr, r2
+        cmp r0,#0 @ check result
+        bge init_opened @ if open failed,
+        @ldr r0,=openfailed @ print message and exit
+        @bl printf
+        @printStr openfailed, openfailedLen
+        @bl __errno_location
+        ldr r0, [r0]
+        @bl strerror
+        @bl perror
+        mov r0,#0 @ return 0 for failure
+        b init_exit
 
 init_opened:
     @@ Open succeeded. Now map the devices
     mov r4,r0 @ move file descriptor to r4
     @ldr r0,=successstr
     @bl printf
-    printStr successstr successstrLen
-    
+    @printStr successstr, 29    
+    printStr successstr, successstrLen    
     @@ Map the GPIO device
     mov r0,r4 @ move file descriptor to r4
     ldr r1,=GPIO_BASE @ address of device in memory
@@ -109,7 +93,7 @@ init_opened:
     @ldr r0,=mappedstr @ print success message
     ldr r1,=gpiostr
     @bl printf
-    printStr mappedstr mappedstrLen
+    @printStr mappedstr, mappedstrLen
     
     @@ Map the UART0 device
     mov r0,r4 @ move file descriptor to r4
@@ -125,7 +109,7 @@ init_opened:
     @ldr r0,=mappedstr @ print success message
     ldr r1,=uart0str
     @bl printf
-    printStr mappedstr mappedstrLen
+    @printStr mappedstr, mappedstrLen
     
     
     @@ All mmaps have succeeded.
@@ -138,17 +122,17 @@ map_failed_exit:
     @@ unmap everything and return
     @ ldr r0,=mapfailedmsg
     @ bl printf
-    printStr mapfailedmsg mapfailedmsgLen
-    bl __errno_location
+    @printStr mapfailedmsg, mapfailedmsgLen
+    @bl __errno_location
     ldr r0, [r0, #0]
-    bl strerror
-    bl perror
+    @bl strerror
+    @bl perror
     bl IO_close
     mov r0,#0
 
 init_close:
     mov r0,r4 @ close /dev/mem
-    bl close
+    flushClose r0
     bl UART_init     
 
 init_exit:
@@ -188,7 +172,9 @@ IO_closeloop:
     ldr r0,[r4] @ load address of device
     mov r1,#BLOCK_SIZE
     cmp r0,#0
-    blgt munmap @ unmap it
+    mov r7, #sys_munmap
+    svc 0
+    @blgt munmap @ unmap it
     mov r0,#0
     str r0,[r4],#4 @ store and increment
     subs r5,r5,#1
@@ -263,7 +249,7 @@ IO_closeloop:
 UART_put_byte:
     @ ldr r0,=sendChar
     @ bl printf
-    printStr sendChar sendCharLen
+    @printStr sendChar, sendCharLen
     ldr r3,=charTest
     ldr r1,=uartbase @ load base address of UART
     ldr r1,[r1] @ load base address of UART
@@ -280,7 +266,7 @@ putlp:
 UART_get_byte:
     @ ldr r0,=getChar
     @ bl printf
-    printStr getChar
+    @printStr getChar, getCharLen
     ldr r1,=uartbase @ load base address of UART
     ldr r1,[r1] @ load base address of UART
 getlp:
@@ -317,7 +303,7 @@ get_ok4:
 UART_init:  
     @ ldr r0,=inituart
     @ bl printf
-    printStr inituart inituartLen
+    @printStr inituart, inituartLen
     ldr r1,=uartbase @ load base address of UART
     ldr r1,[r1] @ load base address of UART
     @@mov r0,#0
@@ -368,3 +354,23 @@ UART_init:
 @     str r1,[r2,#UART_IBRD] @ set integer divisor
 @     str r0,[r2,#UART_FBRD] @ set fractional divisor
 @     mov pc,lr
+
+    .data
+memdev: .asciz "/dev/mem"
+successstr: .asciz "Successfully opened /dev/mem\n"
+successstrLen: .word .-successstr
+mappedstr: .asciz "Mapped %s device at 0x%08X\n"
+mappedstrLen: .word .-mappedstr
+openfailed: .asciz "IO_init: failed to open /dev/mem: "
+openfailedLen: .word .-openfailed
+mapfailedmsg: .asciz "IO_init: mmap of %s failed: "
+mapfailedmsgLen: .word .-mapfailedmsg
+gpiostr: .asciz "GPIO"
+uart0str: .asciz "UART0"
+inituart: .asciz "Inicializando a uart\n"
+inituartLen: .word .-inituart
+sendChar: .asciz "Enviando char\n"
+sendCharLen: .word .-sendChar
+getChar: .asciz "Recebendo char\n"
+getCharLen: .word .-getChar
+charTest: .asciz "a"
