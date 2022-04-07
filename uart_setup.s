@@ -58,7 +58,7 @@
         @@ Try to open /dev/mem
         ldr r6, =memdev @ load address of "/dev/mem"
         ldr r1,=(O_RDWR + O_SYNC) @ set up flags
-        openFile memdev, S_RDWR_file @ call the open syscall
+        openFile memdev, S_RDWR_file @ call the open syscall    
         @printStr successstr, r2
         cmp r0,#0 @ check result
         bge init_opened @ if open failed,
@@ -75,21 +75,22 @@
 
 init_opened:
     @@ Open succeeded. Now map the devices
-    mov r4,r0 @ move file descriptor to r4
+@   mov r4,r0 @ move file descriptor to r4
     @ldr r0,=successstr
     @bl printf
     @printStr successstr, 29    
     printStr successstr, successstrLen    
     @@ Map the GPIO device
-    mov r0,r4 @ move file descriptor to r4
-    ldr r1,=GPIO_BASE @ address of device in memory
+@   mov r0,r4 @ move file descriptor to r4
     bl trymap
-	
-    @error cmp r0,#MAP_FAILED
-    @error ldrne r1,=gpiobase @ if succeeded, load pointer
-    @error strne r0,[r1] @ if succeeded, store value
-    @error ldreq r1,=gpiostr @ if failed, load pointer to string
- 	@error beq map_failed_exit @ if failed, print message
+	ldr r1, =addr_uart
+	ldr r1, [r1]
+    cmp r0,#MAP_FAILED
+    ldrne r1,=gpiobase @ if succeeded, load pointer
+    strne r0,[r1] @ if succeeded, store value
+    ldreq r1,=gpiostr @ if failed, load pointer to string
+	printStr test, testLen @ error aqui 
+    beq map_failed_exit @ if failed, print message
 
     mov r2,r1
 	@error ldr r2,[r2]
@@ -158,6 +159,7 @@ trymap:
     mov r1,#BLOCK_SIZE
     mov r2,#(PROT_READ + PROT_WRITE)
     mov r3,#MAP_SHARED
+    ldr r5,=uartadrr @ address of device in memory
     mov r7, #sys_mmap2 @ mmap2 service num
     svc 0 @ call service
     @bl mmap
@@ -361,8 +363,15 @@ UART_init:
 @     str r0,[r2,#UART_FBRD] @ set fractional divisor
 @     mov pc,lr
 
+@ldr r1, =addr
+@str r0, [r1]
+
     .data
 memdev: .asciz "/dev/mem"
+gpioadrr: .word GPIO_BASE
+uartadrr: .word UART0_BASE
+addr_uart:
+	.word 0
 successstr: .asciz "Successfully opened /dev/mem\n"
 successstrLen: .word .-successstr
 mappedstr: .asciz "Mapped %s device at 0x%08X\n"
