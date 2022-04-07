@@ -10,9 +10,10 @@
 	ldr r4, =S_RDWR_file
 	ldr r4, [r4]
 	mov r2, r4@ RW access rights
-	
 	mov r7, #sys_open
 	svc 0
+	mov r4, r0
+	printStr strtst, strtstLen
 .endm
 
 .macro readFile fd, buffer, length
