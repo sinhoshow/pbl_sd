@@ -58,67 +58,26 @@
         @@ Try to open /dev/mem
         ldr r6, =memdev @ load address of "/dev/mem"
         ldr r1,=(O_RDWR + O_SYNC) @ set up flags
-        openFile memdev, S_RDWR_file @ call the open syscall    
-        @printStr successstr, r2
+        openFile memdev, S_RDWR_file @ call the open syscall
         cmp r0,#0 @ check result
         bge init_opened @ if open failed,
-		printStr test, testLen @ error aqui 
-        @ldr r0,=openfailed @ print message and exit
-        @bl printf
-        @printStr openfailed, openfailedLen
-        @bl __errno_location
         ldr r0, [r0]
-        @bl strerror
-        @bl perror
-        mov r0,#0 @ return 0 for failure
+        mov r0,#0
         b init_exit
 
 init_opened:
     @@ Open succeeded. Now map the devices
-@   mov r4,r0 @ move file descriptor to r4
-    @ldr r0,=successstr
-    @bl printf
-    @printStr successstr, 29    
     printStr successstr, successstrLen    
-    @@ Map the GPIO device
-@   mov r0,r4 @ move file descriptor to r4
-    bl trymap
-	ldr r1, =addr_uart
-	ldr r1, [r1]
+    @@ Map the UART device
+    bl trymapuart
     cmp r0,#MAP_FAILED
-    ldrne r1,=gpiobase @ if succeeded, load pointer
+    ldrne r1,=addr_uart @ if succeeded, load pointer
     strne r0,[r1] @ if succeeded, store value
-    ldreq r1,=gpiostr @ if failed, load pointer to string
-	printStr test, testLen @ error aqui 
+
+    ldreq r1,=uart0str @ if failed, load pointer to string
     beq map_failed_exit @ if failed, print message
 
-    mov r2,r1
-	@error ldr r2,[r2]
-    @ldr r0,=mappedstr @ print success message
-    ldr r1,=gpiostr
-    @bl printf
-    @printStr mappedstr, mappedstrLen
-	
-	@@@@@@@ Da para ser colocado em outra função 
-    @@ Map the UART0 device
-
-    mov r0,r4 @ move file descriptor to r4
-    ldr r1,=UART0_BASE @ address of device in memory
-
-    bl trymap
-    @ cmp r0,#MAP_FAILED			@@@@@@@ era para entrar aqui só se fosse falho ?
-    @ ldrne r1,=uartbase @ if succeeded, load pointer
-    @ strne r0,[r1] @ if succeeded, store value
-    @error ldreq r1,=uart0str @ if failed, load pointer to string
-    @error beq map_failed_exit @ if failed, print message
-    mov r2,r1
-   	@error ldr r2,[r2]
-    @ldr r0,=mappedstr @ print success message
-    ldr r1,=uart0str
-
-    @bl printf
-    @printStr mappedstr, mappedstrLen
-    
+    mov r2,r1    
     @@ All mmaps have succeeded.
     @@ Close file and return 1 for success
     mov r5,#1
@@ -127,27 +86,24 @@ init_opened:
 map_failed_exit:
     @@ At least one mmap failed. Print error,
     @@ unmap everything and return
-    @ ldr r0,=mapfailedmsg
-    @ bl printf
-    @printStr mapfailedmsg, mapfailedmsgLen
-    @bl __errno_location
+    printStr mapfailedmsg, mapfailedmsgLen
     ldr r0, [r0, #0]
-    @bl strerror
-    @bl perror
     bl IO_close
     mov r0,#0
 
 init_close:
-    mov r0,r4 @ close /dev/mem
+    mov r0,r6 @ close /dev/mem
     flushClose r0
-    bl UART_init     
+    b UART_init     
 
 init_exit:
-    ldmfd sp!,{r4,r5,pc} @ return
+    mov r0, #0
+    mov r7, #1
+    svc 0
     
 @@@ -----------------------------------------------------------
-@@@ trymap(int fd, unsigned offset) Calls mmap.
-trymap: 
+@@@ trymapuart(int fd, unsigned offset) Calls mmap.
+trymapuart: 
     stmfd sp!,{r5-r7,lr}
     mov r5,r1 @ copy address to r5
     mov r7,#0xFF @ set up a mask for aligning
@@ -166,14 +122,14 @@ trymap:
     add sp,sp,#8 @ pop params from stack
     cmp r0,#-1
     addne r0,r0,r6 @ add offset from page boundary
+    @printStr test, testLen
     ldmfd sp!,{r5-r7,pc}
-	printStr test, testLen @ aqui era pra printa 
     @@@ -----------------------------------------------------------
     @@@ IO_close unmaps all of the devices
     .global IO_close
 IO_close:
     stmfd sp!,{r4,r5,lr}
-    ldr r4,=gpiobase @ get address of first pointer
+    ldr r4,=uartadrr @ get address of first pointer
     mov r5,#4 @ there are 4 pointers
 
 IO_closeloop:
@@ -255,11 +211,13 @@ IO_closeloop:
 @@ ----------------------------------------------------------
     .global UART_put_byte
 UART_put_byte:
+    @mov r2, #0
     @ ldr r0,=sendChar
     @ bl printf
     @printStr sendChar, sendCharLen
     ldr r3,=charTest
-    ldr r1,=uartbase @ load base address of UART
+    ldr r3, [r3]
+    ldr r1,=addr_uart @ load base address of UART
     ldr r1,[r1] @ load base address of UART
      
 putlp:    
@@ -271,11 +229,11 @@ putlp:
 
 @@@ ---------------------------------------------------------
     .global UART_get_byte
-UART_get_byte:
+UART_get_byte:    
     @ ldr r0,=getChar
     @ bl printf
     @printStr getChar, getCharLen
-    ldr r1,=uartbase @ load base address of UART
+    ldr r1,=addr_uart @ load base address of UART
     ldr r1,[r1] @ load base address of UART
 getlp:
     ldr r2,[r1,#UART_FR] @ read the flag resister
@@ -300,8 +258,7 @@ get_ok3:
 get_ok4:
     @@ return
     @bl printf
-    bl init_exit
-@    mov pc,lr @ return the received character
+    mov pc,lr @ return the received character
 
 @@@ ---------------------------------------------------------
     
@@ -309,10 +266,8 @@ get_ok4:
     @@@ 115200 baud, no parity, 2 stop bits, 8 data bits
     .global UART_init
 UART_init:  
-    @ ldr r0,=inituart
-    @ bl printf
-    @printStr inituart, inituartLen
-    ldr r1,=uartbase @ load base address of UART
+    printStr inituart, inituartLen
+    ldr r1,=addr_uart @ load base address of UART
     ldr r1,[r1] @ load base address of UART
     @@mov r0,#0
     @@str r0,[r1,#UART_CR]
@@ -336,7 +291,7 @@ UART_init:
     str r0,[r1,#UART_CR]
     bl UART_put_byte
     @@ return
-    mov pc,lr
+    b init_exit
 
 @ @@ ---------------------------------------------------------
 @     @@ UART_set_baud will change the baud rate to whatever is in r0
@@ -357,7 +312,7 @@ UART_init:
 @     bl divide @ divide clk freq by (baud*16)
 @     asr r1,r0,#6 @ put integer divisor into r1
 @     and r0,r0,#0x3F @ put fractional divisor into r0
-@     ldr r2,=uartbase @ load base address of UART
+@     ldr r2,=addr_uart @ load base address of UART
 @     ldr r2,[r2] @ load base address of UART
 @     str r1,[r2,#UART_IBRD] @ set integer divisor
 @     str r0,[r2,#UART_FBRD] @ set fractional divisor
