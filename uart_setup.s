@@ -92,7 +92,7 @@ map_failed_exit:
     mov r0,#0
 
 init_close:
-    mov r0,r6 @ close /dev/mem
+    mov r0,r4 @ close /dev/mem
     flushClose r0
     b UART_init     
 
