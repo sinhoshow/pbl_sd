@@ -316,7 +316,7 @@ UART_init:
 
 @ldr r1, =addr
 @str r0, [r1]
-
+    .align 2
     .data
 memdev: .asciz "/dev/mem"
 gpioadrr: .word GPIO_BASE
