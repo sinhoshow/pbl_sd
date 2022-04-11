@@ -339,6 +339,6 @@ sendChar: .asciz "Enviando char\n"
 sendCharLen: .word .-sendChar
 getChar: .asciz "Recebendo char\n"
 getCharLen: .word .-getChar
-charTest: .asciz "a"
+charTest: .word 1
 test: .asciz "cheguei aqui"
 testLen: .word .-test
