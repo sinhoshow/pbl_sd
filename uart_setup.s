@@ -210,54 +210,50 @@ IO_closeloop:
 
 @@ ----------------------------------------------------------
     .global UART_put_byte
-UART_put_byte:
-    @mov r2, #0
-    @ ldr r0,=sendChar
-    @ bl printf
-    @printStr sendChar, sendCharLen
+UART_put_byte:	
     ldr r3,=charTest
     ldr r3, [r3]
     ldr r1,=addr_uart @ load base address of UART
-    ldr r1,[r1] @ load base address of UART
-     
+    ldr r1,[r1] @ load base address of UART         
 putlp:    
     ldr r2,[r1,#UART_FR] @ read the flag resister
     tst r2,#UART_TXFF @ check if transmit FIFO is full
     bne putlp @ loop while transmit FIFO is full
-    str r3,[r1,#UART_DR] @ write the char to the FIFO
+    str r3,[r1,#UART_DR] @ write the char to the FIFO 
 @    mov pc,lr @ return
 
 @@@ ---------------------------------------------------------
     .global UART_get_byte
-UART_get_byte:    
+UART_get_byte:
+	  
     @ ldr r0,=getChar
     @ bl printf
     @printStr getChar, getCharLen
     ldr r1,=addr_uart @ load base address of UART
-    ldr r1,[r1] @ load base address of UART
+    ldr r1,[r1] @ load base address of UART     
 getlp:
     ldr r2,[r1,#UART_FR] @ read the flag resister
-    tst r2,#UART_RXFE @ check if receive FIFO is empty
-    bne getlp @ loop while receive FIFO is empty
+    tst r2,#UART_RXFE @ check if receive FIFO is empty    
+    bne getlp @ loop while receive FIFO is empty     
     ldr r0,[r1,#UART_DR] @ read the char from the FIFO
     tst r0,#UART_OE @ check for overrun error
-    bne get_ok1    
+    bne get_ok1       
 @@ handle receive overrun error here - does nothing now
 get_ok1:
-    tst r0,#UART_BE @ check for break error
+    tst r0,#UART_BE @ check for break error    
     bne get_ok2
 @@ handle receive break error here - does nothing now
 get_ok2:
-    tst r0,#UART_PE @ check for parity error
+    tst r0,#UART_PE @ check for parity error     
     bne get_ok3
 @@ handle receive parity error here - does nothing now
 get_ok3:
-    tst r0,#UART_FE @ check for framing error
+    tst r0,#UART_FE @ check for framing error    
     bne get_ok4
 @@ handle receive framing error here - does nothing now
 get_ok4:
     @@ return
-    @bl printf
+    @bl printf    
     mov pc,lr @ return the received character
 
 @@@ ---------------------------------------------------------
@@ -266,11 +262,11 @@ get_ok4:
     @@@ 115200 baud, no parity, 2 stop bits, 8 data bits
     .global UART_init
 UART_init:  
-    printStr inituart, inituartLen
+    printStr inituart, inituartLen    
     ldr r1,=addr_uart @ load base address of UART
     ldr r1,[r1] @ load base address of UART
-    @@mov r0,#0
-    @@str r0,[r1,#UART_CR]
+    mov r0,#0
+    str r0,[r1,#UART_CR]
     @@ set baud rate divisor
     @@ (3MHz / ( 115200 * 16 )) = 1.62760416667
     @@ = 1.101000 in binary
@@ -288,7 +284,7 @@ UART_init:
     @@ enable receiver and transmitter and enable the uart
     .equ FINALBITS, (UART_RXE|UART_TXE|UART_UARTEN)
     ldr r0,=FINALBITS
-    str r0,[r1,#UART_CR]
+    str r0,[r1,#UART_CR]   
     bl UART_put_byte
     @@ return
     b init_exit
