@@ -55,6 +55,17 @@
 	svc 0
 .endm
 
+.macro  printReg    reg
+      push     {r0-r4, lr} @
+      mov      r2, R\reg   @
+      mov      r3, R\reg   @
+      mov      r1, #\reg
+      add      r1, #'0'    @
+      ldr      r0, =ptfStr @
+      bl       printf @ call
+      pop      {r0-r4, lr} @
+.endm
+
 @ .global countLen @ Allow other files to call this routine
 @ countLen: push {r4-r5} @ Save the registers we use.
 @ 	mov r4, r1
