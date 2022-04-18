@@ -35,10 +35,10 @@ O projeto foi desenvolvido para a Raspberry pi Zero, portanto é necessário ter
 ##### No terminal da placa:
 
 - Clonar o projeto
-`git clone https://github.com/sinhoshow/pbl_sd.git`
+  `git clone https://github.com/sinhoshow/pbl_sd.git`
 
 - Executar makefile
-`chmod +x makefile.sh; ./makefile.sh`
+  `chmod +x makefile.sh; ./makefile.sh`
 
 - Executar ./uart_setup
-`./uart_setup`
+  `./uart_setup`
