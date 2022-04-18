@@ -110,7 +110,7 @@
     uartbase: .word 0
     
 @@@ -----------------------------------------------------------
-@@@ _start abri o arquivo /dev/mem e chama a label que inicia o
+@@@ _start abre o arquivo /dev/mem e chama a label que inicia o
 @@@ mapeamento da UART
 @@@ -----------------------------------------------------------
     .global _start
@@ -228,6 +228,9 @@ IO_closeloop:
     bgt IO_closeloop
     ldmfd sp!,{r4,r5,pc}
 
+@@@ -----------------------------------------------------------
+@@@ UART_put_byte envia os dados para o registrador de dado (#UART_DR)
+@@@ -----------------------------------------------------------
 
     .global UART_put_byte
 UART_put_byte:	
@@ -239,10 +242,13 @@ putlp:
     ldr r2,[r1,#UART_FR] @ read the flag resister
     tst r2,#UART_TXFF @ check if transmit FIFO is full
     bne putlp @ loop while transmit FIFO is full
-    str r3,[r1,#UART_DR] @ write the char to the FIFO 
+    str r3,[r1,#UART_DR] @ write the char to the FIFO
 @    mov pc,lr @ return
 
-@@@ ---------------------------------------------------------
+@@@ -----------------------------------------------------------
+@@@ UART_get_byte pega os dados do registrador de dado (#UART_DR)
+@@@ e faz a verificação de erros 
+@@@ -----------------------------------------------------------
     .global UART_get_byte
 UART_get_byte:
 	  
@@ -276,10 +282,10 @@ get_ok4:
     @bl printf    
     mov pc,lr @ return the received character
 
-@@@ ---------------------------------------------------------
-    
-    @@@ UART init will set default values:
-    @@@ 115200 baud, no parity, 2 stop bits, 8 data bits
+@@@ -----------------------------------------------------------
+@@@ UART_init inicializa a UART com as seguintes configurações:
+@@@ 115200 baud, no parity, 2 stop bits, 8 data bits
+@@@ -----------------------------------------------------------
     .global UART_init
 UART_init:  
     printStr inituart, inituartLen    
@@ -294,6 +300,10 @@ UART_init:
     str r0,[r1,#UART_IBRD]
     mov r0,#0x28
     str r0,[r1,#UART_FBRD]
+    @ mov r0,#5
+    @ str r0,[r1,#UART_IBRD]
+    @ mov r0,#0x21
+    @ str r0,[r1,#UART_FBRD]
     @@ set parity, word length, enable FIFOS
     .equ BITS, (UART_WLEN1|UART_WLEN0|UART_FEN|UART_STP2)
     mov r0,#BITS
@@ -304,41 +314,11 @@ UART_init:
     @@ enable receiver and transmitter and enable the uart
     .equ FINALBITS, (UART_RXE|UART_TXE|UART_UARTEN)
     ldr r0,=FINALBITS
-    str r0,[r1,#UART_CR]
-    @bl UART_set_baud   
+    str r0,[r1,#UART_CR] 
     bl UART_put_byte
     @@ return
     b init_exit
 
-@ @@ ---------------------------------------------------------
-@     @@ UART_set_baud will change the baud rate to whatever is in r0
-@     @@ The baud rate divisor is calculated as follows: Baud rate
-@     @@ divisor BAUDDIV = (FUARTCLK/(16 Baud rate)) where FUARTCLK
-@     @@ is the UART reference clock frequency. The BAUDDIV
-@     @@ is comprised of the integer value IBRD and the
-@     @@ fractional value FBRD. NOTE: The contents of the
-@     @@ IBRD and FBRD registers are not updated until
-@     @@ transmission or reception of the current character
-@     @@ is complete.
-@     .global UART_set_baud
-@UART_set_baud:
-    @@ set baud rate divisor using formula:
-    @@ (3000000.0 / ( R0 * 16 )) ASSUMING 3Mhz clock
-    @@lsl r1,r0,#4 @ r1 <- desired baud * 16
-    @@ldr r0,=(3000000<<6)@ Load 3 MHz as a U(26,6) in r0
-    @@bl divide @ divide clk freq by (baud*16)
-    @@asr r1,r0,#6 @ put integer divisor into r1
-    @@and r0,r0,#0x3F @ put fractional divisor into r0
-    @ mov r1, #0
-    @ mov r0, #0
-    @ ldr r2,=addr_uart @ load base address of UART
-    @ ldr r2,[r2] @ load base address of UART
-    @ str r1,[r2,#UART_IBRD] @ set integer divisor
-    @ str r0,[r2,#UART_FBRD] @ set fractional divisor
-    @ mov pc,lr
-
-@ldr r1, =addr
-@str r0, [r1]
     .align 2
     .data
 memdev: .asciz "/dev/mem"
@@ -362,6 +342,4 @@ sendChar: .asciz "Enviando char\n"
 sendCharLen: .word .-sendChar
 getChar: .asciz "Recebendo char\n"
 getCharLen: .word .-getChar
-charTest: .word 2
-test: .asciz "cheguei aqui"
-testLen: .word .-test
+charTest: .asciz "a"

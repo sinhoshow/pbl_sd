@@ -9,7 +9,7 @@ O projeto foi desenvolvido em assembly com o objetivo de configurar a porta seri
 - Quantidade de bits de parada
 - Quantidade de bits de mensagem
 
-Para configurar os parâmetros àcima é necessário modificar as constantes que fazem referência aos valores desejados diretamento no código fonte (uart_setup.s), recompilar o projeto e rodar novamente.
+Para configurar os parâmetros àcima é necessário modificar as constantes que fazem referência aos valores desejados diretamento no código fonte (uart_setup.s), recompilar o projeto e rodar novamente. [EM que linha tal modificação configura tal coisa]
 
 ### Estruturação de arquivos
 
@@ -29,8 +29,15 @@ Arquivo auxiliar que contém código do mapeamento dos pinos da raspberry, este 
 
 Arquivo que contém as constantes que fazem referência às chamadas do sistema que foram utilizadas no desenvolvimento.
 
+-- run.sh
+
+Script para montar o executável e executar o projeto
+
+[Diagrama de blocos do projeto]
+
 ### Rodando o projeto
 O projeto foi desenvolvido para a Raspberry pi Zero, portanto é necessário ter a placa para exeução do código.
+[Especificar ambiente do projeto: versão do arm, sistema operacional da raspberrypi zero]
 
 ##### No terminal da placa:
 
@@ -39,3 +46,7 @@ O projeto foi desenvolvido para a Raspberry pi Zero, portanto é necessário ter
 
 - Executar run.sh
   `chmod +x run.sh; ./run.sh`
+
+### Testando envio e recebimento dos dados
+
+Descrever teste no osciloscópio
