@@ -304,7 +304,8 @@ UART_init:
     @@ enable receiver and transmitter and enable the uart
     .equ FINALBITS, (UART_RXE|UART_TXE|UART_UARTEN)
     ldr r0,=FINALBITS
-    str r0,[r1,#UART_CR]   
+    str r0,[r1,#UART_CR]
+    @bl UART_set_baud   
     bl UART_put_byte
     @@ return
     b init_exit
@@ -320,19 +321,21 @@ UART_init:
 @     @@ transmission or reception of the current character
 @     @@ is complete.
 @     .global UART_set_baud
-@ UART_set_baud:
-@     @@ set baud rate divisor using formula:
-@     @@ (3000000.0 / ( R0 * 16 )) ASSUMING 3Mhz clock
-@     lsl r1,r0,#4 @ r1 <- desired baud * 16
-@     ldr r0,=(3000000<<6)@ Load 3 MHz as a U(26,6) in r0
-@     bl divide @ divide clk freq by (baud*16)
-@     asr r1,r0,#6 @ put integer divisor into r1
-@     and r0,r0,#0x3F @ put fractional divisor into r0
-@     ldr r2,=addr_uart @ load base address of UART
-@     ldr r2,[r2] @ load base address of UART
-@     str r1,[r2,#UART_IBRD] @ set integer divisor
-@     str r0,[r2,#UART_FBRD] @ set fractional divisor
-@     mov pc,lr
+@UART_set_baud:
+    @@ set baud rate divisor using formula:
+    @@ (3000000.0 / ( R0 * 16 )) ASSUMING 3Mhz clock
+    @@lsl r1,r0,#4 @ r1 <- desired baud * 16
+    @@ldr r0,=(3000000<<6)@ Load 3 MHz as a U(26,6) in r0
+    @@bl divide @ divide clk freq by (baud*16)
+    @@asr r1,r0,#6 @ put integer divisor into r1
+    @@and r0,r0,#0x3F @ put fractional divisor into r0
+    @ mov r1, #0
+    @ mov r0, #0
+    @ ldr r2,=addr_uart @ load base address of UART
+    @ ldr r2,[r2] @ load base address of UART
+    @ str r1,[r2,#UART_IBRD] @ set integer divisor
+    @ str r0,[r2,#UART_FBRD] @ set fractional divisor
+    @ mov pc,lr
 
 @ldr r1, =addr
 @str r0, [r1]
@@ -359,6 +362,6 @@ sendChar: .asciz "Enviando char\n"
 sendCharLen: .word .-sendChar
 getChar: .asciz "Recebendo char\n"
 getCharLen: .word .-getChar
-charTest: .word 1
+charTest: .word 2
 test: .asciz "cheguei aqui"
 testLen: .word .-test
