@@ -28,3 +28,17 @@ Arquivo auxiliar que contém código do mapeamento dos pinos da raspberry, este 
 -- call_system.s
 
 Arquivo que contém as constantes que fazem referência às chamadas do sistema que foram utilizadas no desenvolvimento.
+
+### Rodando o projeto
+O projeto foi desenvolvido para a Raspberry pi Zero, portanto é necessário ter a placa para exeução do código.
+
+##### No terminal da placa:
+
+- Clonar o projeto
+`git clone https://github.com/sinhoshow/pbl_sd.git`
+
+- Executar makefile
+`chmod +x makefile.sh; ./makefile.sh`
+
+- Executar ./uart_setup
+`./uart_setup`
