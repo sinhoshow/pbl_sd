@@ -11,7 +11,7 @@ O projeto foi desenvolvido em assembly com o objetivo de configurar a porta seri
 
 Para configurar os parâmetros àcima é necessário modificar as constantes que fazem referência aos valores desejados diretamento no código fonte (uart_setup.s), recompilar o projeto e rodar novamente.
 
-###Estruturação de arquivos
+### Estruturação de arquivos
 -- uart_setup.s
 Arquivo principal que contém todo fluxo de configuração da UART, como a inicialização das constantes que fazem referência aos valores dos registradores e configurações, mapeamento do endereço de memória, envio e recebimento dos dados para teste de funcionamento.
 -- macros.s
