@@ -6,16 +6,6 @@
 @@@ global variables, and the user program can then
 @@@ use those pointers to access the device registers.
 @@@ -----------------------------------------------------------
-.include "macros.s"
-.text
-@@@ -----------------------------------------------------------
-@@@ The following global variables will hold the addresses of
-@@@ the devices that can be accessed directly after IO_init
-@@@ has been called.
-    .global gpiobase
-    gpiobase: .word 0
-    .global uartbase
-    uartbase: .word 0    
 
 @@@ These are the addresses for the I/O devices (after
 @@@ the firmware boot code has remapped them).
@@ -44,108 +34,8 @@
     .equ O_SYNC, 00010000
     .equ O_FSYNC, O_SYNC
     .equ O_ASYNC, 00020000
-
-
-
-    
-@@@ -----------------------------------------------------------
-@@@ IO_init() maps devices into memory space and stores their
-@@@ addresses in global variables.
-@@@ -----------------------------------------------------------
-    .global _start
-    _start:        
-        stmfd sp!,{r4,r5,lr}
-        @@ Try to open /dev/mem
-        ldr r6, =memdev @ load address of "/dev/mem"
-        ldr r1,=(O_RDWR + O_SYNC) @ set up flags
-        openFile memdev, S_RDWR_file @ call the open syscall
-        cmp r0,#0 @ check result
-        bge init_opened @ if open failed,
-        ldr r0, [r0]
-        mov r0,#0
-        b init_exit
-
-init_opened:
-    @@ Open succeeded. Now map the devices
-    printStr successstr, successstrLen    
-    @@ Map the UART device
-    bl trymapuart
-    cmp r0,#MAP_FAILED
-    ldrne r1,=addr_uart @ if succeeded, load pointer
-    strne r0,[r1] @ if succeeded, store value
-
-    ldreq r1,=uart0str @ if failed, load pointer to string
-    beq map_failed_exit @ if failed, print message
-
-    mov r2,r1    
-    @@ All mmaps have succeeded.
-    @@ Close file and return 1 for success
-    mov r5,#1
-    b init_close
-
-map_failed_exit:
-    @@ At least one mmap failed. Print error,
-    @@ unmap everything and return
-    printStr mapfailedmsg, mapfailedmsgLen
-    ldr r0, [r0, #0]
-    bl IO_close
-    mov r0,#0
-
-init_close:
-    mov r0,r4 @ close /dev/mem
-    flushClose r0
-    b UART_init     
-
-init_exit:
-    mov r0, #0
-    mov r7, #1
-    svc 0
-    
-@@@ -----------------------------------------------------------
-@@@ trymapuart(int fd, unsigned offset) Calls mmap.
-trymapuart: 
-    stmfd sp!,{r5-r7,lr}
-    mov r5,r1 @ copy address to r5
-    mov r7,#0xFF @ set up a mask for aligning
-    orr r7,#0xF00
-    and r6,r5,r7 @ get offset from page boundary
-    bic r1,r5,r7 @ align phys addr to page boundary
-    stmfd sp!,{r0,r1} @ push last two params for mmap
-    mov r0,#0 @ let kernel choose virt address
-    mov r1,#BLOCK_SIZE
-    mov r2,#(PROT_READ + PROT_WRITE)
-    mov r3,#MAP_SHARED
-    ldr r5,=uartadrr @ address of device in memory
-    mov r7, #sys_mmap2 @ mmap2 service num
-    svc 0 @ call service
-    @bl mmap
-    add sp,sp,#8 @ pop params from stack
-    cmp r0,#-1
-    addne r0,r0,r6 @ add offset from page boundary
-    @printStr test, testLen
-    ldmfd sp!,{r5-r7,pc}
-    @@@ -----------------------------------------------------------
-    @@@ IO_close unmaps all of the devices
-    .global IO_close
-IO_close:
-    stmfd sp!,{r4,r5,lr}
-    ldr r4,=uartadrr @ get address of first pointer
-    mov r5,#4 @ there are 4 pointers
-
-IO_closeloop:
-    ldr r0,[r4] @ load address of device
-    mov r1,#BLOCK_SIZE
-    cmp r0,#0
-    mov r7, #sys_munmap
-    svc 0
-    @blgt munmap @ unmap it
-    mov r0,#0
-    str r0,[r4],#4 @ store and increment
-    subs r5,r5,#1
-    bgt IO_closeloop
-    ldmfd sp!,{r4,r5,pc}
-
-@@ offsets to the UART registers
+@@ ----------------------------------------------------------        
+   @@ offsets to the UART registers
     .equ UART_DR, 0x00 @ data register
     .equ UART_RSRECR, 0x04 @ Receive Status/Error clear
     .equ UART_FR, 0x18 @ flag register
@@ -206,9 +96,139 @@ IO_closeloop:
     .equ UART_SIREN, (1<<1) @ Unsupported
     .equ UART_UARTEN, (1<<0) @ Enable UART
 
-  
+@@ ---------------------------------------------------------- 
 
-@@ ----------------------------------------------------------
+.include "macros.s"
+.text
+@@@ -----------------------------------------------------------
+@@@ The following global variables will hold the addresses of
+@@@ the devices that can be accessed directly after IO_init
+@@@ has been called.
+    .global gpiobase
+    gpiobase: .word 0
+    .global uartbase
+    uartbase: .word 0
+    
+@@@ -----------------------------------------------------------
+@@@ _start abri o arquivo /dev/mem e chama a label que inicia o
+@@@ mapeamento da UART
+@@@ -----------------------------------------------------------
+    .global _start
+    _start:        
+        stmfd sp!,{r4,r5,lr}
+        @@ Try to open /dev/mem
+        ldr r6, =memdev @ load address of "/dev/mem"
+        ldr r1,=(O_RDWR + O_SYNC) @ set up flags
+        openFile memdev, S_RDWR_file @ call the open syscall
+        cmp r0,#0 @ check result
+        bge init_opened @ if open failed,
+        ldr r0, [r0]
+        mov r0,#0
+        b init_exit
+	
+@@@ -----------------------------------------------------------
+@@@ init_opened chama a label que irá fazer o mapeamento e verifica
+@@@ se o mapeamento foi feito com sucesso, além de salvar o mapeamento
+@@@ na variavel addr_uart
+@@@ -----------------------------------------------------------
+
+init_opened:
+    @@ Open succeeded. Now map the devices
+    printStr successstr, successstrLen    
+    @@ Map the UART device
+    bl trymapuart
+    cmp r0,#MAP_FAILED
+    ldrne r1,=addr_uart @ if succeeded, load pointer
+    strne r0,[r1] @ if succeeded, store value
+
+    ldreq r1,=uart0str @ if failed, load pointer to string
+    beq map_failed_exit @ if failed, print message
+
+    mov r2,r1    
+    @@ All mmaps have succeeded.
+    @@ Close file and return 1 for success
+    mov r5,#1
+    b init_close
+    
+@@@ -----------------------------------------------------------
+@@@ map_failed_exit só acontecerá se o mapeamento falhar, colocando
+@@@ o valor de R0 ( R0 é onde o valor retornado do mapemaneto ) para 0
+@@@ -----------------------------------------------------------
+
+map_failed_exit:
+    @@ At least one mmap failed. Print error,
+    @@ unmap everything and return
+    printStr mapfailedmsg, mapfailedmsgLen
+    ldr r0, [r0, #0]
+    bl IO_close
+    mov r0,#0
+    
+@@@ -----------------------------------------------------------
+@@@ init_close fecha o arquivo /dev/mem e chama a label UART_init
+@@@ -----------------------------------------------------------
+
+init_close:
+    mov r0,r4 @ close /dev/mem
+    flushClose r0
+    b UART_init     
+    
+@@@ -----------------------------------------------------------
+@@@ init_exit fecha o programa
+@@@ -----------------------------------------------------------
+
+init_exit:
+    mov r0, #0
+    mov r7, #1
+    svc 0
+    
+@@@ -----------------------------------------------------------
+@@@ trymapuart faz o mapeamento da UART
+@@@ -----------------------------------------------------------    
+
+trymapuart: 
+    stmfd sp!,{r5-r7,lr}
+    mov r5,r1 @ copy address to r5
+    mov r7,#0xFF @ set up a mask for aligning
+    orr r7,#0xF00
+    and r6,r5,r7 @ get offset from page boundary
+    bic r1,r5,r7 @ align phys addr to page boundary
+    stmfd sp!,{r0,r1} @ push last two params for mmap
+    mov r0,#0 @ let kernel choose virt address
+    mov r1,#BLOCK_SIZE
+    mov r2,#(PROT_READ + PROT_WRITE)
+    mov r3,#MAP_SHARED
+    ldr r5,=uartadrr @ address of device in memory
+    mov r7, #sys_mmap2 @ mmap2 service num
+    svc 0 @ call service
+    add sp,sp,#8 @ pop params from stack
+    cmp r0,#-1
+    addne r0,r0,r6 @ add offset from page boundary
+    ldmfd sp!,{r5-r7,pc}
+    
+ @@@ -----------------------------------------------------------
+ @@@ IO_close desmapeia todos os dispositivos
+ @@@ -----------------------------------------------------------
+
+    .global IO_close
+IO_close:
+    stmfd sp!,{r4,r5,lr}
+    ldr r4,=uartadrr @ get address of first pointer
+    mov r5,#4 @ there are 4 pointers
+
+IO_closeloop:
+    ldr r0,[r4] @ load address of device
+    mov r1,#BLOCK_SIZE
+    cmp r0,#0
+    mov r7, #sys_munmap
+    svc 0
+    @blgt munmap @ unmap it
+    mov r0,#0
+    str r0,[r4],#4 @ store and increment
+    subs r5,r5,#1
+    bgt IO_closeloop
+    ldmfd sp!,{r4,r5,pc}
+
+
     .global UART_put_byte
 UART_put_byte:	
     ldr r3,=charTest
