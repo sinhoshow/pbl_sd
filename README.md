@@ -3,6 +3,8 @@
 
 O projeto foi desenvolvido em assembly com o objetivo de configurar a porta serial (UART) de uma placa raspberry pi zero.
 
+Para configurar os parâmetros abaixo é necessário modificar as constantes que fazem referência aos valores desejados diretamento no código fonte (uart_setup.s), recompilar o projeto e rodar novamente.
+
 #### Configurações possíveis
 - Paridade (adicionar essas constantes [UART_EPS e UART_PEN] ao 'or' do .BITS no código na linha 308 para paridade par, para ímpar, deixar sem as constantes)
 - Velocidade (baud rate: adicionar a parte inteira na linha 299 e a parte decimal na linha 301 ao registrador r0)
@@ -13,7 +15,7 @@ O projeto foi desenvolvido em assembly com o objetivo de configurar a porta seri
 - sem paridade, 2 stopbits, 8 bits de dados
 `308: .equ BITS, (UART_WLEN1|UART_WLEN0|UART_FEN|UART_STP2)`
 
-Para configurar os parâmetros àcima é necessário modificar as constantes que fazem referência aos valores desejados diretamento no código fonte (uart_setup.s), recompilar o projeto e rodar novamente. [EM que linha tal modificação configura tal coisa]
+
 
 ### Estruturação de arquivos
 
@@ -24,10 +26,6 @@ Arquivo principal que contém todo fluxo de configuração da UART, como a inici
 -- macros.s
 
 Arquivo que contém macros utilizados para auxiliar no desenvolvimento do projeto, como abrir e fechar arquivo e printar strings
-
--- gpiomem.s
-
-Arquivo auxiliar que contém código do mapeamento dos pinos da raspberry, este arquivo não está sendo utilizado no fluxo, o código foi retirado do livro.
 
 -- call_system.s
 
