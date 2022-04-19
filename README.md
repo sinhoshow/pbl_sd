@@ -4,10 +4,14 @@
 O projeto foi desenvolvido em assembly com o objetivo de configurar a porta serial (UART) de uma placa raspberry pi zero.
 
 #### Configurações possíveis
-- Paridade
-- Velocidade (baud rate)
-- Quantidade de bits de parada
-- Quantidade de bits de mensagem
+- Paridade (adicionar essas constantes [UART_EPS e UART_PEN] ao 'or' do .BITS no código na linha 308 para paridade par, para ímpar, deixar sem as constantes)
+- Velocidade (baud rate: adicionar a parte inteira na linha 299 e a parte decimal na linha 301 ao registrador r0)
+- Quantidade de bits de parada (utilizar a constante UART_STP2 na operação 'or' .BITS no código na linha 308 para setar dois bits de parada, caso queira apenas 1, não utilizar a constante)
+- Quantidade de bits de mensagem (#UART_WLEN1 e UART_WLEN0 [00 - 5 bits, 01 - 6 bits, 10 - 7 bits, 11 - 8bits]. As constantes representam a combinação respectivamente na operação 'or' .BITS no código na linha 308. Por exemplo, caso deseja 5 bits (combinação 00), apenas não colocar nenhuma das constantes na operação or.) 
+
+###### Exemplo de combinação de configuração
+- sem paridade, 2 stopbits, 8 bits de dados
+`308: .equ BITS, (UART_WLEN1|UART_WLEN0|UART_FEN|UART_STP2)`
 
 Para configurar os parâmetros àcima é necessário modificar as constantes que fazem referência aos valores desejados diretamento no código fonte (uart_setup.s), recompilar o projeto e rodar novamente. [EM que linha tal modificação configura tal coisa]
 
