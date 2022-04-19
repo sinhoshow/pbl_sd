@@ -33,6 +33,10 @@ Arquivo que contém as constantes que fazem referência às chamadas do sistema 
 
 Script para montar o executável e executar o projeto
 
+-- debug.sh
+
+Script para abrir o debug do projeto, para debugar tem-se que escolher um break point, colocando "b" no terminal e a linha do código. Depois coloca-se “r” para rodar o código até o local do break point.
+
 [Diagrama de blocos do projeto]
 
 ### Rodando o projeto
@@ -48,5 +52,4 @@ O projeto foi desenvolvido para a Raspberry pi Zero, portanto é necessário ter
   `chmod +x run.sh; ./run.sh`
 
 ### Testando envio e recebimento dos dados
-
-Descrever teste no osciloscópio
+Para testar o envio de dados, tem que colocar as garras do osciloscópio na GND da UART e outra no TXRE da UART. Já para fazer o teste de loopback tem-se que fazer um debug no código e  usar a instrução “i r” no terminal para ver os registradores. Ao fazer esses passos, tem-se que observar o R0 para ver se o valor colocado  é o mesmo que está na linha 345. Pois, depois de executado o código ele terá enviado e recebido o dado da linha 345.
