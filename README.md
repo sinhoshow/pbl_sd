@@ -27,10 +27,6 @@ Arquivo principal que contém todo fluxo de configuração da UART, como a inici
 
 Arquivo que contém macros utilizados para auxiliar no desenvolvimento do projeto, como abrir e fechar arquivo e printar strings
 
--- gpiomem.s
-
-Arquivo auxiliar que contém código do mapeamento dos pinos da raspberry, este arquivo não está sendo utilizado no fluxo, o código foi retirado do livro.
-
 -- call_system.s
 
 Arquivo que contém as constantes que fazem referência às chamadas do sistema que foram utilizadas no desenvolvimento.
