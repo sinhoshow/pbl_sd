@@ -41,7 +41,7 @@ Script para montar o executável e executar o projeto
 
 Script para abrir o debug do projeto, para debugar tem-se que escolher um break point, colocando "b" no terminal e a linha do código. Depois coloca-se “r” para rodar o código até o local do break point.
 
-[Diagrama de blocos do projeto]
+![Diagrama do projeto](Diagrama_pbl_problema_01.jpg)
 
 ### Rodando o projeto
 O projeto foi desenvolvido para a Raspberry pi Zero, portanto é necessário ter a placa para execução do código. Na versão ARMv6 BCM2835, sistema operacional RASPBIAN.  
