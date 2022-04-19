@@ -40,7 +40,7 @@ Script para abrir o debug do projeto, para debugar tem-se que escolher um break 
 [Diagrama de blocos do projeto]
 
 ### Rodando o projeto
-O projeto foi desenvolvido para a Raspberry pi Zero, portanto é necessário ter a placa para exeução do código.
+O projeto foi desenvolvido para a Raspberry pi Zero, portanto é necessário ter a placa para execução do código. Na versão ARM BCM2835,   
 [Especificar ambiente do projeto: versão do arm, sistema operacional da raspberrypi zero]
 
 ##### No terminal da placa:
